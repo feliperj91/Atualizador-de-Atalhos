@@ -39,19 +39,49 @@ $updateButton.Text     = "Atualizar"
 $updateButton.Location = New-Object System.Drawing.Point(370,48)
 $tabPage1.Controls.Add($updateButton)
 
+# Checkbox para ativar/desativar a caixa de texto (sem texto)
+$chkCodHemo = New-Object System.Windows.Forms.CheckBox
+$chkCodHemo.Location = New-Object System.Drawing.Point(10,80)
+$chkCodHemo.Size     = New-Object System.Drawing.Size(20,20)
+$chkCodHemo.Add_CheckedChanged({
+    if ($chkCodHemo.Checked) {
+        $txtCodHemo.Enabled = $true
+    } else {
+        $txtCodHemo.Enabled = $false
+        $txtCodHemo.Text    = ""
+    }
+})
+$tabPage1.Controls.Add($chkCodHemo)
+
+# Label COD_HEMO
+$lblCodHemo = New-Object System.Windows.Forms.Label
+$lblCodHemo.Text     = "COD_HEMO"
+$lblCodHemo.Location = New-Object System.Drawing.Point(30,82)
+$lblCodHemo.Size     = New-Object System.Drawing.Size(80,20)
+$tabPage1.Controls.Add($lblCodHemo)
+
+# Caixa de texto COD_HEMO (desativada por padrão)
+$txtCodHemo = New-Object System.Windows.Forms.TextBox
+$txtCodHemo.Location = New-Object System.Drawing.Point(110,80)
+$txtCodHemo.Size     = New-Object System.Drawing.Size(100,20)
+$txtCodHemo.MaxLength = 15
+$txtCodHemo.Enabled   = $false
+$tabPage1.Controls.Add($txtCodHemo)
+
 $statusBox = New-Object System.Windows.Forms.TextBox
 $statusBox.Multiline   = $true
 $statusBox.ScrollBars  = 'Vertical'
 $statusBox.ReadOnly    = $true
-$statusBox.Size        = New-Object System.Drawing.Size(460,80)
-$statusBox.Location    = New-Object System.Drawing.Point(10,90)
+$statusBox.Size        = New-Object System.Drawing.Size(460,100)
+$statusBox.Location    = New-Object System.Drawing.Point(10,150)
 $tabPage1.Controls.Add($statusBox)
 
+# Evento do botão Atualizar
 $updateButton.Add_Click({
-    $nomeSubpasta = $textBox.Text.Trim().ToLower()
+    $nomeSubpasta    = $textBox.Text.Trim().ToLower()
     if ([string]::IsNullOrWhiteSpace($nomeSubpasta)) {
         [System.Windows.Forms.MessageBox]::Show(
-            "Digite o nome da subpasta.","Erro",
+            "Informe o caminho a ser atualizado.","Erro",
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Error
         )
@@ -100,14 +130,14 @@ $updateButton.Add_Click({
         } catch {}
     }
 
-    # Exibe resultado atualização
+    # Exibe resultado atualização de atalhos
     if ($alterados -gt 0) {
         $statusBox.Text = "✅ Total de atalhos atualizados: $alterados"
     } else {
         $statusBox.Text = "ℹ️ Nenhum atalho precisava ser atualizado."
     }
 
-    # Se existir pasta bootstrap e houver alterações, pergunta para ajustar WebUpdate.ini
+    # Ajuste do WebUpdate.ini se houver bootstrap
     $caminhoBootstrap = Join-Path $caminhoNovo "bootstrap"
     if ($alterados -gt 0 -and (Test-Path $caminhoBootstrap)) {
         $resp = [System.Windows.Forms.MessageBox]::Show(
@@ -127,7 +157,6 @@ $updateButton.Add_Click({
                 )
                 return
             }
-
             $linhas   = Get-Content $arquivoIni
             $alterIni = 0
             for ($i = 0; $i -lt $linhas.Count; $i++) {
@@ -156,6 +185,34 @@ $updateButton.Add_Click({
                     [System.Windows.Forms.MessageBoxIcon]::Information
                 )
             }
+        }
+    }
+
+    # Ajusta parâmetro COD_HEMO em _data_access.ini
+    if ($chkCodHemo.Checked) {
+        $arquivoDataAccess = Join-Path $caminhoNovo "_data_access.ini"
+        if (Test-Path $arquivoDataAccess) {
+            $linhasData = Get-Content $arquivoDataAccess
+            for ($j = 0; $j -lt $linhasData.Count; $j++) {
+                if ($linhasData[$j] -match '^N =\[_cod_hem\]=') {
+                    $linhasData[$j] = "N =[_cod_hem]= $($txtCodHemo.Text)"
+                    break
+                }
+            }
+            Set-Content -Path $arquivoDataAccess -Value $linhasData
+            [System.Windows.Forms.MessageBox]::Show(
+                "_data_access alterado para $($txtCodHemo.Text)",
+                "Sucesso",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Information
+            )
+        } else {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Arquivo '_data_access.ini' não encontrado em '$caminhoNovo'.",
+                "Erro",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Error
+            )
         }
     }
 })
@@ -247,21 +304,26 @@ $applyButton.Add_Click({
 })
 
 # ---------------------- ABA SOBRE ----------------------
-$aboutLabel = New-Object System.Windows.Forms.Label
-$aboutLabel.AutoSize = $false
-$aboutLabel.Size     = New-Object System.Drawing.Size(460,180)
-$aboutLabel.Location = New-Object System.Drawing.Point(10,10)
-$aboutLabel.Text     = @"
+$aboutText = New-Object System.Windows.Forms.TextBox
+$aboutText.Multiline        = $true
+$aboutText.ReadOnly         = $true
+$aboutText.ScrollBars       = 'Vertical'
+$aboutText.WordWrap         = $true
+$aboutText.Size             = New-Object System.Drawing.Size(460,240)
+$aboutText.Location         = New-Object System.Drawing.Point(10,10)
+$aboutText.Text     = @"
 Instruções de uso:
 
 - Aba Atualizador: informe o nome da pasta que contém os atalhos do Hemote Plus. O script corrige o caminho de destino e o diretório de trabalho. Em seguida, pergunta se deseja ajustar o WebUpdate.ini na pasta Bootstrap; se confirmado, faz o ajuste automático.
+
+Permite alterar o COD_HEMO, no _data_access da pasta informada, ao ativar o parâmetro e digitando no campo de texto o valor desejado.
 
 - Aba Bootstrap: permite, de forma independente, ajustar os parâmetros PathLocalRoot e FinalApp no arquivo WebUpdate.ini presente na pasta Bootstrap.
 
 Versão: 1.6
 Autor: Felipe Almeida
 "@
-$tabPage2.Controls.Add($aboutLabel)
+$tabPage2.Controls.Add($aboutText)
 
 # Exibe o formulário
 [void]$form.ShowDialog()
