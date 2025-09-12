@@ -15,10 +15,10 @@ $form.MinimizeBox     = $true
 $tabControl = New-Object System.Windows.Forms.TabControl
 $tabControl.Dock = [System.Windows.Forms.DockStyle]::Fill
 $tabPage1        = New-Object System.Windows.Forms.TabPage("Atualizador")
-$tabPageBootstrap= New-Object System.Windows.Forms.TabPage("Bootstrap")
+
 $tabPageCopiaExe = New-Object System.Windows.Forms.TabPage("Copiar exe")
 $tabPageSobre    = New-Object System.Windows.Forms.TabPage("Sobre")
-$tabControl.TabPages.AddRange(@($tabPage1,$tabPageBootstrap,$tabPageCopiaExe,$tabPageSobre))
+$tabControl.TabPages.AddRange(@($tabPage1,$tabPageCopiaExe,$tabPageSobre))
 $form.Controls.Add($tabControl)
 
 # ---------------------- ABA “Atualizador” ----------------------
@@ -148,7 +148,6 @@ $comboPrinterEtiqueta.Location      = New-Object System.Drawing.Point(150,160)
 $comboPrinterEtiqueta.Size          = New-Object System.Drawing.Size(370,20)
 $comboPrinterEtiqueta.Enabled       = $false
 $tabPage1.Controls.Add($comboPrinterEtiqueta)
-
 
 # Progress bar and label (rodapé elevado)
 $lblProgress = New-Object System.Windows.Forms.Label
@@ -506,123 +505,26 @@ $updateButton.Add_Click({
 
 
 
+#----------------------------------- --- ABA "Copiar exe" ----------------------
 
-# ---------------------- ABA “Sobre” ----------------------
-$aboutText = New-Object System.Windows.Forms.TextBox
-$aboutText.Multiline  = $true
-$aboutText.ReadOnly   = $true
-$aboutText.Dock       = [System.Windows.Forms.DockStyle]::Fill
-$aboutText.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
-$aboutText.Text       = @"
-Ajuste de Atalhos v1.1
-Desenvolvido por HMG.
-"@
-$tabPageSobre.Controls.Add($aboutText)
-
-# ---------------------- ABA BOOTSTRAP (manual) ----------------------
-$bootstrapLabel = New-Object System.Windows.Forms.Label
-$bootstrapLabel.Text     = "Selecione o arquivo WebUpdate.ini:"
-$bootstrapLabel.AutoSize = $true
-$bootstrapLabel.Location = New-Object System.Drawing.Point(10,20)
-$tabPageBootstrap.Controls.Add($bootstrapLabel)
-
-$fileDialog = New-Object System.Windows.Forms.OpenFileDialog
-$fileDialog.Filter = "INI files (*.ini)|*.ini"
-$fileDialog.Title  = "Selecione o arquivo WebUpdate.ini"
-
-$selectFileButton = New-Object System.Windows.Forms.Button
-$selectFileButton.Text     = "Buscar"
-$selectFileButton.Location = New-Object System.Drawing.Point(10,50)
-$tabPageBootstrap.Controls.Add($selectFileButton)
-
-$selectedFileLabel = New-Object System.Windows.Forms.Label
-$selectedFileLabel.AutoSize = $true
-$selectedFileLabel.Location = New-Object System.Drawing.Point(10,80)
-$tabPageBootstrap.Controls.Add($selectedFileLabel)
-
-$nomeLabel = New-Object System.Windows.Forms.Label
-$nomeLabel.Text     = "Nome da pasta (ex: sacs_teste):"
-$nomeLabel.AutoSize = $true
-$nomeLabel.Location = New-Object System.Drawing.Point(10,110)
-$tabPageBootstrap.Controls.Add($nomeLabel)
-
-$nomeTextBox = New-Object System.Windows.Forms.TextBox
-$nomeTextBox.Size     = New-Object System.Drawing.Size(300,20)
-$nomeTextBox.Location = New-Object System.Drawing.Point(10,135)
-$tabPageBootstrap.Controls.Add($nomeTextBox)
-
-$applyButton = New-Object System.Windows.Forms.Button
-$applyButton.Text     = "Aplicar"
-$applyButton.Location = New-Object System.Drawing.Point(320,133)
-$tabPageBootstrap.Controls.Add($applyButton)
-
-$bootstrapStatus = New-Object System.Windows.Forms.TextBox
-$bootstrapStatus.Multiline   = $true
-$bootstrapStatus.ScrollBars  = 'Vertical'
-$bootstrapStatus.ReadOnly    = $true
-$bootstrapStatus.Size        = New-Object System.Drawing.Size(460,50)
-$bootstrapStatus.Location    = New-Object System.Drawing.Point(10,170)
-$tabPageBootstrap.Controls.Add($bootstrapStatus)
-
-$selectFileButton.Add_Click({
-    if ($fileDialog.ShowDialog() -eq 'OK') {
-        $selectedFileLabel.Text = "Arquivo selecionado: $($fileDialog.FileName)"
-    }
-})
-
-$applyButton.Add_Click({
-    $arquivoIni = $fileDialog.FileName
-    $novoNome   = $nomeTextBox.Text.Trim()
-    if (-not (Test-Path $arquivoIni)) {
-        [System.Windows.Forms.MessageBox]::Show("Selecione um arquivo válido.","Erro",
-            [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error)
-        return
-    }
-    if ([string]::IsNullOrWhiteSpace($novoNome)) {
-        [System.Windows.Forms.MessageBox]::Show("Informe o nome da pasta.","Erro",
-            [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error)
-        return
-    }
-    $linhas   = Get-Content $arquivoIni
-    $alterIni = 0
-    for ($i = 0; $i -lt $linhas.Count; $i++) {
-        if ($linhas[$i] -match '^PathLocalRoot=C:\\[^\\]+\\update\\?$') {
-            $linhas[$i] = "PathLocalRoot=C:\$novoNome\update"
-            $alterIni++
-        }
-        if ($linhas[$i] -match '^FinalApp="C:\\[^\\]+\\atalhos\\.*"$') {
-            $linhas[$i] = $linhas[$i] -replace '^FinalApp="C:\\[^\\]+\\atalhos\\', "FinalApp=`"C:\$novoNome\atalhos\"
-            $alterIni++
-        }
-    }
-    if ($alterIni -gt 0) {
-        Set-Content -Path $arquivoIni -Value $linhas
-        $bootstrapStatus.Text = "✅ Alterações aplicadas: $alterIni linha(s)."
-    } else {
-        $bootstrapStatus.Text = "ℹ️ Nenhuma linha foi alterada."
-    }
-})
-
-# ---------------------- ABA COPIAR EXE ----------------------
-
-# Origem
+# Label Origem
 $lblOrigem = New-Object System.Windows.Forms.Label
 $lblOrigem.Text     = "Pasta de origem:"
 $lblOrigem.AutoSize = $true
-$lblOrigem.Location = New-Object System.Drawing.Point(10,20)
+$lblOrigem.Location = New-Object System.Drawing.Point(10, 20)
 $tabPageCopiaExe.Controls.Add($lblOrigem)
 
+# TextBox Origem
 $txtOrigem = New-Object System.Windows.Forms.TextBox
-$txtOrigem.Size     = New-Object System.Drawing.Size(300,20)
-$txtOrigem.Location = New-Object System.Drawing.Point(110,18)
+$txtOrigem.Size     = New-Object System.Drawing.Size(300, 20)
+$txtOrigem.Location = New-Object System.Drawing.Point(110, 18)
 $tabPageCopiaExe.Controls.Add($txtOrigem)
 
+# Botão Browse Origem
 $btnBrowseOrigem = New-Object System.Windows.Forms.Button
 $btnBrowseOrigem.Text     = "…"
-$btnBrowseOrigem.Size     = New-Object System.Drawing.Size(30,20)
-$btnBrowseOrigem.Location = New-Object System.Drawing.Point(420,18)
+$btnBrowseOrigem.Size     = New-Object System.Drawing.Size(30, 20)
+$btnBrowseOrigem.Location = New-Object System.Drawing.Point(420, 18)
 $btnBrowseOrigem.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
     if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
@@ -631,22 +533,24 @@ $btnBrowseOrigem.Add_Click({
 })
 $tabPageCopiaExe.Controls.Add($btnBrowseOrigem)
 
-# Destino
+# Label Destino
 $lblDestino = New-Object System.Windows.Forms.Label
 $lblDestino.Text     = "Pasta de destino:"
 $lblDestino.AutoSize = $true
-$lblDestino.Location = New-Object System.Drawing.Point(10,60)
+$lblDestino.Location = New-Object System.Drawing.Point(10, 60)
 $tabPageCopiaExe.Controls.Add($lblDestino)
 
+# TextBox Destino
 $txtDestino = New-Object System.Windows.Forms.TextBox
-$txtDestino.Size     = New-Object System.Drawing.Size(300,20)
-$txtDestino.Location = New-Object System.Drawing.Point(110,58)
+$txtDestino.Size     = New-Object System.Drawing.Size(300, 20)
+$txtDestino.Location = New-Object System.Drawing.Point(110, 58)
 $tabPageCopiaExe.Controls.Add($txtDestino)
 
+# Botão Browse Destino
 $btnBrowseDestino = New-Object System.Windows.Forms.Button
 $btnBrowseDestino.Text     = "…"
-$btnBrowseDestino.Size     = New-Object System.Drawing.Size(30,20)
-$btnBrowseDestino.Location = New-Object System.Drawing.Point(420,58)
+$btnBrowseDestino.Size     = New-Object System.Drawing.Size(30, 20)
+$btnBrowseDestino.Location = New-Object System.Drawing.Point(420, 58)
 $btnBrowseDestino.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
     if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
@@ -655,13 +559,13 @@ $btnBrowseDestino.Add_Click({
 })
 $tabPageCopiaExe.Controls.Add($btnBrowseDestino)
 
-# Botão Copiar EXE
+# Botão “Copiar EXE” – agora usando o gerenciador do Windows
 $btnCopiar = New-Object System.Windows.Forms.Button
 $btnCopiar.Text     = "Copiar EXE"
-$btnCopiar.Size     = New-Object System.Drawing.Size(440,30)
-$btnCopiar.Location = New-Object System.Drawing.Point(10,100)
+$btnCopiar.Size     = New-Object System.Drawing.Size(440, 30)
+$btnCopiar.Location = New-Object System.Drawing.Point(10, 100)
 $btnCopiar.Add_Click({
-    # Verifica campos preenchidos
+    # Valida campos
     if ([string]::IsNullOrWhiteSpace($txtOrigem.Text) -or
         [string]::IsNullOrWhiteSpace($txtDestino.Text)) {
         [System.Windows.Forms.MessageBox]::Show(
@@ -684,7 +588,7 @@ $btnCopiar.Add_Click({
         return
     }
 
-    # Valida existência de pastas
+    # Verifica existência de pasta
     if (-not (Test-Path $src) -or -not (Test-Path $dest)) {
         [System.Windows.Forms.MessageBox]::Show(
             "Origem ou Destino inválido(s).","Erro",
@@ -694,71 +598,30 @@ $btnCopiar.Add_Click({
         return
     }
 
-    # Coleta arquivos .exe na raiz
-    $files = Get-ChildItem -Path $src -Filter *.exe -File
-    if ($files.Count -eq 0) {
+    # Copia todos os .exe de uma vez, exibindo progresso e sobrescrevendo
+    $shell      = New-Object -ComObject Shell.Application
+    $destFolder = $shell.NameSpace($dest)
+
+    # 0x10 = FOF_NOCONFIRMATION (substituir sem perguntar)
+    $flags = 0x10
+
+    try {
+        # usa wildcard para agrupar tudo num único diálogo
+        $destFolder.CopyHere("$src\*.exe", $flags)
+    } catch {
         [System.Windows.Forms.MessageBox]::Show(
-            "Nenhum .exe encontrado em:`n$src","Aviso",
+            "Erro ao copiar arquivos:`n$($_.Exception.Message)","Erro",
             [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Information
+            [System.Windows.Forms.MessageBoxIcon]::Error
         )
-        return
     }
-
-    # Cria janela de progresso modal centralizada
-    $progressForm = New-Object System.Windows.Forms.Form
-    $progressForm.Size            = New-Object System.Drawing.Size(300,100)
-    $progressForm.FormBorderStyle = 'FixedToolWindow'
-    $progressForm.StartPosition   = 'CenterScreen'
-    $progressForm.TopMost         = $true
-    $progressForm.ControlBox      = $false
-
-    $lblMsg = New-Object System.Windows.Forms.Label
-    $lblMsg.Text     = "Copiando executáveis..."
-    $lblMsg.AutoSize = $true
-    $lblMsg.Location = New-Object System.Drawing.Point(10,10)
-    $progressForm.Controls.Add($lblMsg)
-
-    $prg = New-Object System.Windows.Forms.ProgressBar
-    $prg.Location  = New-Object System.Drawing.Point(10,40)
-    $prg.Size      = New-Object System.Drawing.Size(260,20)
-    $prg.Minimum   = 0
-    $prg.Maximum   = $files.Count
-    $prg.Value     = 0
-    $progressForm.Controls.Add($prg)
-
-    # Exibe form de progresso modeless para permitir DoEvents()
-    $progressForm.Show($form)
-    [System.Windows.Forms.Application]::DoEvents()
-
-    # Loop de cópia e atualização da barra
-    $copiados = 0
-    foreach ($file in $files) {
-        try {
-            Copy-Item -Path $file.FullName `
-                      -Destination (Join-Path $dest $file.Name) `
-                      -Force -ErrorAction Stop
-            $copiados++
-        } catch { }
-        $prg.Value = $copiados
-        [System.Windows.Forms.Application]::DoEvents()
-    }
-
-    # Fecha a janela de progresso
-    $progressForm.Close()
-
-    # Mensagem final apenas com total de .exe copiados
-    [System.Windows.Forms.MessageBox]::Show(
-        "$copiados arquivo(s) copiado(s) com sucesso.","Sucesso",
-        [System.Windows.Forms.MessageBoxButtons]::OK,
-        [System.Windows.Forms.MessageBoxIcon]::Information
-    )
 })
 $tabPageCopiaExe.Controls.Add($btnCopiar)
 
 
-# Anexa o TabControl ao formulário e mostra
-$form.Controls.Add($tabControl)
+
+
+
 
 
 
