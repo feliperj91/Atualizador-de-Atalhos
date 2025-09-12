@@ -1,231 +1,337 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Cria o formulário
+# ---------------------- FORMULÁRIO ----------------------
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = "Atualizador de Atalhos"
-$form.ClientSize      = New-Object System.Drawing.Size(500,300)
+$form.ClientSize      = New-Object System.Drawing.Size(550,400)
 $form.StartPosition   = "CenterScreen"
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox     = $false
 $form.MinimizeBox     = $true
-$form.Topmost         = $true
 
-# Cria o TabControl
+# ---------------------- TABS ----------------------
 $tabControl = New-Object System.Windows.Forms.TabControl
-$tabControl.Dock = 'Fill'
-
-# Cria as abas
+$tabControl.Dock = [System.Windows.Forms.DockStyle]::Fill
 $tabPage1         = New-Object System.Windows.Forms.TabPage("Atualizador")
 $tabPageBootstrap = New-Object System.Windows.Forms.TabPage("Bootstrap")
 $tabPageCopiaExe  = New-Object System.Windows.Forms.TabPage("Copiar exe")
-$tabPage2         = New-Object System.Windows.Forms.TabPage("Sobre")
-
-# Adiciona as abas na ordem desejada
-$tabControl.TabPages.Add($tabPage1)         # Aba 0: Atualizador
-$tabControl.TabPages.Add($tabPageBootstrap) # Aba 1: Bootstrap
-$tabControl.TabPages.Add($tabPageCopiaExe)  # Aba 2: Copiar exe
-$tabControl.TabPages.Add($tabPage2)         # Aba 3: Sobre
-
-# Anexa o TabControl ao formulário
+$tabPageSobre     = New-Object System.Windows.Forms.TabPage("Sobre")
+$tabControl.TabPages.AddRange(@($tabPage1,$tabPageBootstrap,$tabPageCopiaExe,$tabPageSobre))
 $form.Controls.Add($tabControl)
 
-
-
-# ---------------------- ABA ATUALIZADOR ----------------------
+# ---------------------- ABA “Atualizador” ----------------------
+# 1) Instrução
 $label = New-Object System.Windows.Forms.Label
-$label.Text     = "Informe a pasta SACS (ex: sacs_teste):"
+$label.Text     = "Selecione a pasta SACS:"
 $label.AutoSize = $true
 $label.Location = New-Object System.Drawing.Point(10,20)
 $tabPage1.Controls.Add($label)
 
-$textBox = New-Object System.Windows.Forms.TextBox
-$textBox.Size     = New-Object System.Drawing.Size(350,20)
-$textBox.Location = New-Object System.Drawing.Point(10,50)
-$tabPage1.Controls.Add($textBox)
+# 2) ComboBox pastas SACS
+$comboBox = New-Object System.Windows.Forms.ComboBox
+$comboBox.DropDownStyle = 'DropDownList'
+$comboBox.Size          = New-Object System.Drawing.Size(350,20)
+$comboBox.Location      = New-Object System.Drawing.Point(10,50)
+$comboBox.SelectedIndex = -1
+$tabPage1.Controls.Add($comboBox)
 
+# 3) Botão Atualizar
 $updateButton = New-Object System.Windows.Forms.Button
 $updateButton.Text     = "Atualizar"
 $updateButton.Location = New-Object System.Drawing.Point(370,48)
 $tabPage1.Controls.Add($updateButton)
 
-# Checkbox para ativar/desativar a caixa de texto (sem texto)
+# 4) COD_HEMO
 $chkCodHemo = New-Object System.Windows.Forms.CheckBox
-$chkCodHemo.Location = New-Object System.Drawing.Point(10,80)
+$chkCodHemo.Location = New-Object System.Drawing.Point(10,90)
 $chkCodHemo.Size     = New-Object System.Drawing.Size(20,20)
 $chkCodHemo.Add_CheckedChanged({
-    if ($chkCodHemo.Checked) {
-        $txtCodHemo.Enabled = $true
-    } else {
-        $txtCodHemo.Enabled = $false
-        $txtCodHemo.Text    = ""
-    }
+    $txtCodHemo.Enabled = $chkCodHemo.Checked
+    if (-not $chkCodHemo.Checked) { $txtCodHemo.Clear() }
 })
 $tabPage1.Controls.Add($chkCodHemo)
-
-# Label COD_HEMO
 $lblCodHemo = New-Object System.Windows.Forms.Label
 $lblCodHemo.Text     = "COD_HEMO"
-$lblCodHemo.Location = New-Object System.Drawing.Point(30,82)
-$lblCodHemo.Size     = New-Object System.Drawing.Size(80,20)
+$lblCodHemo.AutoSize = $true
+$lblCodHemo.Location = New-Object System.Drawing.Point(30,92)
 $tabPage1.Controls.Add($lblCodHemo)
-
-# Caixa de texto COD_HEMO (desativada por padrão)
 $txtCodHemo = New-Object System.Windows.Forms.TextBox
-$txtCodHemo.Location = New-Object System.Drawing.Point(110,80)
-$txtCodHemo.Size     = New-Object System.Drawing.Size(100,20)
+$txtCodHemo.Location  = New-Object System.Drawing.Point(110,90)
+$txtCodHemo.Size      = New-Object System.Drawing.Size(100,20)
 $txtCodHemo.MaxLength = 15
 $txtCodHemo.Enabled   = $false
 $tabPage1.Controls.Add($txtCodHemo)
 
-$statusBox = New-Object System.Windows.Forms.TextBox
-$statusBox.Multiline   = $true
-$statusBox.ScrollBars  = 'Vertical'
-$statusBox.ReadOnly    = $true
-$statusBox.Size        = New-Object System.Drawing.Size(460,100)
-$statusBox.Location    = New-Object System.Drawing.Point(10,150)
-$tabPage1.Controls.Add($statusBox)
+# 5) Atalhos
+$chkAtalhos = New-Object System.Windows.Forms.CheckBox
+$chkAtalhos.Location = New-Object System.Drawing.Point(220,90)
+$chkAtalhos.Size     = New-Object System.Drawing.Size(20,20)
+$tabPage1.Controls.Add($chkAtalhos)
+$lblAtalhos = New-Object System.Windows.Forms.Label
+$lblAtalhos.Text     = "Atalhos"
+$lblAtalhos.AutoSize = $true
+$lblAtalhos.Location = New-Object System.Drawing.Point(240,92)
+$tabPage1.Controls.Add($lblAtalhos)
 
-# Evento do botão Atualizar
-$updateButton.Add_Click({
-    $nomeSubpasta    = $textBox.Text.Trim().ToLower()
-    if ([string]::IsNullOrWhiteSpace($nomeSubpasta)) {
+# 6) BootStrap
+$chkBootstrap = New-Object System.Windows.Forms.CheckBox
+$chkBootstrap.Location = New-Object System.Drawing.Point(320,90)
+$chkBootstrap.Size     = New-Object System.Drawing.Size(20,20)
+$tabPage1.Controls.Add($chkBootstrap)
+$lblBootstrap = New-Object System.Windows.Forms.Label
+$lblBootstrap.Text     = "BootStrap"
+$lblBootstrap.AutoSize = $true
+$lblBootstrap.Location = New-Object System.Drawing.Point(340,92)
+$tabPage1.Controls.Add($lblBootstrap)
+
+# 7) Registrar OCX
+$chkRegistrarOCX = New-Object System.Windows.Forms.CheckBox
+$chkRegistrarOCX.Location = New-Object System.Drawing.Point(420,90)
+$chkRegistrarOCX.Size     = New-Object System.Drawing.Size(20,20)
+$tabPage1.Controls.Add($chkRegistrarOCX)
+$lblRegistrarOCX = New-Object System.Windows.Forms.Label
+$lblRegistrarOCX.Text     = "Registrar OCX"
+$lblRegistrarOCX.AutoSize = $true
+$lblRegistrarOCX.Location = New-Object System.Drawing.Point(440,92)
+$tabPage1.Controls.Add($lblRegistrarOCX)
+
+# 8) Barra de progresso Registro de OCX
+$lblProgress = New-Object System.Windows.Forms.Label
+$lblProgress.Text     = "Aguarde, registrando as OCX."
+$lblProgress.AutoSize = $true
+$lblProgress.Location = New-Object System.Drawing.Point(10,320) #Localização da label Registrando OCX
+$lblProgress.Visible  = $false
+$tabPage1.Controls.Add($lblProgress)
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Location = New-Object System.Drawing.Point(10,340) #Localização da progress bar Registro de OCX
+$progressBar.Size     = New-Object System.Drawing.Size(530,20)
+$progressBar.Minimum  = 0
+$progressBar.Value    = 0
+$progressBar.Visible  = $false
+$tabPage1.Controls.Add($progressBar)
+
+# ---------------------- POPULA PASTAS SACS ----------------------
+function Populate-SacsFolders {
+    $comboBox.Items.Clear()
+    try {
+        Get-ChildItem -Path 'C:\' -Directory |
+          Where-Object Name -like 'SACS*' |
+          Sort-Object Name |
+          ForEach-Object { $comboBox.Items.Add($_.Name) }
+        $comboBox.SelectedIndex = -1
+    } catch {
         [System.Windows.Forms.MessageBox]::Show(
-            "Informe o caminho a ser atualizado.","Erro",
+            "Erro ao listar pastas:`n$_","Aviso",
             [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error
-        )
-        return
+            [System.Windows.Forms.MessageBoxIcon]::Error)
     }
-
-    $caminhoNovo    = "C:\$nomeSubpasta"
-    $caminhoAtalhos = Join-Path $caminhoNovo "atalhos"
-
-    if (-not (Test-Path $caminhoAtalhos)) {
-        [System.Windows.Forms.MessageBox]::Show(
-            "A pasta 'atalhos' não foi encontrada em '$caminhoNovo'.","Erro",
-            [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error
-        )
-        return
-    }
-
-    # Atualiza atalhos
-    $atalhos   = Get-ChildItem -Path $caminhoAtalhos -Recurse -Filter *.lnk -ErrorAction SilentlyContinue |
-                 Where-Object { -not $_.PSIsContainer }
-    $alterados = 0
-    foreach ($atalho in $atalhos) {
-        try {
-            $shell    = New-Object -ComObject WScript.Shell
-            $shortcut = $shell.CreateShortcut($atalho.FullName)
-            $foiAlterado = $false
-            foreach ($campo in @("TargetPath","WorkingDirectory")) {
-                $valorOriginal = $shortcut.$campo
-                if ($valorOriginal -like "C:\*") {
-                    $partes = $valorOriginal -split "\\",4
-                    if ($partes.Count -ge 3) {
-                        $partes[1] = $nomeSubpasta
-                        $novoValor = $partes -join "\"
-                        if ($shortcut.$campo -ne $novoValor) {
-                            $shortcut.$campo = $novoValor
-                            $foiAlterado    = $true
-                        }
-                    }
-                }
-            }
-            if ($foiAlterado) {
-                $shortcut.Save()
-                $alterados++
-            }
-        } catch {}
-    }
-
-    # Exibe resultado atualização de atalhos
-    if ($alterados -gt 0) {
-        $statusBox.Text = "✅ Total de atalhos atualizados: $alterados"
-    } else {
-        $statusBox.Text = "ℹ️ Nenhum atalho precisava ser atualizado."
-    }
-
-    # Ajuste do WebUpdate.ini se houver bootstrap
-    $caminhoBootstrap = Join-Path $caminhoNovo "bootstrap"
-    if ($alterados -gt 0 -and (Test-Path $caminhoBootstrap)) {
-        $resp = [System.Windows.Forms.MessageBox]::Show(
-            "A pasta 'bootstrap' foi encontrada em '$caminhoNovo'.`nDeseja ajustar o WebUpdate.ini agora?",
-            "Ajuste Bootstrap",
-            [System.Windows.Forms.MessageBoxButtons]::YesNo,
-            [System.Windows.Forms.MessageBoxIcon]::Question
-        )
-        if ($resp -eq [System.Windows.Forms.DialogResult]::Yes) {
-            $arquivoIni = Join-Path $caminhoBootstrap "WebUpdate.ini"
-            if (-not (Test-Path $arquivoIni)) {
-                [System.Windows.Forms.MessageBox]::Show(
-                    "Arquivo WebUpdate.ini não encontrado em '$caminhoBootstrap'.",
-                    "Erro",
-                    [System.Windows.Forms.MessageBoxButtons]::OK,
-                    [System.Windows.Forms.MessageBoxIcon]::Error
-                )
-                return
-            }
-            $linhas   = Get-Content $arquivoIni
-            $alterIni = 0
-            for ($i = 0; $i -lt $linhas.Count; $i++) {
-                if ($linhas[$i] -match '^PathLocalRoot=C:\\[^\\]+\\update\\?$') {
-                    $linhas[$i] = "PathLocalRoot=C:\$nomeSubpasta\update"
-                    $alterIni++
-                }
-                if ($linhas[$i] -match '^FinalApp="C:\\[^\\]+\\atalhos\\.*"$') {
-                    $linhas[$i] = $linhas[$i] -replace '^FinalApp="C:\\[^\\]+\\atalhos\\', "FinalApp=`"C:\$nomeSubpasta\atalhos\"
-                    $alterIni++
-                }
-            }
-            if ($alterIni -gt 0) {
-                Set-Content -Path $arquivoIni -Value $linhas
-                [System.Windows.Forms.MessageBox]::Show(
-                    "WebUpdate.ini ajustado: $alterIni alteração(ões).",
-                    "Sucesso",
-                    [System.Windows.Forms.MessageBoxButtons]::OK,
-                    [System.Windows.Forms.MessageBoxIcon]::Information
-                )
-            } else {
-                [System.Windows.Forms.MessageBox]::Show(
-                    "Nenhum parâmetro precisava ser ajustado no WebUpdate.ini.",
-                    "Info",
-                    [System.Windows.Forms.MessageBoxButtons]::OK,
-                    [System.Windows.Forms.MessageBoxIcon]::Information
-                )
-            }
-        }
-    }
-
-    # Ajusta parâmetro COD_HEMO em _data_access.ini
-    if ($chkCodHemo.Checked) {
-        $arquivoDataAccess = Join-Path $caminhoNovo "_data_access.ini"
-        if (Test-Path $arquivoDataAccess) {
-            $linhasData = Get-Content $arquivoDataAccess
-            for ($j = 0; $j -lt $linhasData.Count; $j++) {
-                if ($linhasData[$j] -match '^N =\[_cod_hem\]=') {
-                    $linhasData[$j] = "N =[_cod_hem]= $($txtCodHemo.Text)"
-                    break
-                }
-            }
-            Set-Content -Path $arquivoDataAccess -Value $linhasData
-            [System.Windows.Forms.MessageBox]::Show(
-                "_data_access alterado para $($txtCodHemo.Text)",
-                "Sucesso",
-                [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Information
-            )
+}
+$comboBox.Add_SelectedIndexChanged({
+    if ($comboBox.SelectedIndex -ge 0) {
+        $sel = $comboBox.SelectedItem.ToString().Trim()
+        $pathBoot = Join-Path (Join-Path 'C:\' $sel) 'bootstrap'
+        if (Test-Path $pathBoot) {
+            $resp = [System.Windows.Forms.MessageBox]::Show(
+                "Bootstrap encontrado em '$sel'. Deseja pré-marcá-lo?",
+                "Bootstrap",
+                [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                [System.Windows.Forms.MessageBoxIcon]::Question)
+            $chkBootstrap.Checked = ($resp -eq [System.Windows.Forms.DialogResult]::Yes)
         } else {
-            [System.Windows.Forms.MessageBox]::Show(
-                "Arquivo '_data_access.ini' não encontrado em '$caminhoNovo'.",
-                "Erro",
-                [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Error
-            )
+            $chkBootstrap.Checked = $false
         }
     }
 })
+$form.Add_Shown({ Populate-SacsFolders })
+
+# ---------------------- CLIQUE “Atualizar” ----------------------
+$updateButton.Add_Click({
+    # validacão COMBO apenas se ações que requerem pasta SACS
+    $needsFolder = $chkCodHemo.Checked -or $chkAtalhos.Checked -or $chkBootstrap.Checked
+    if ($needsFolder -and $comboBox.SelectedIndex -lt 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Selecione uma pasta SACS na lista.","Erro",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Error)
+        return
+    }
+
+    $nomeSubpasta = if ($comboBox.SelectedIndex -ge 0) {
+        $comboBox.SelectedItem.ToString().Trim().ToLower()
+    } else {
+        ""
+    }
+    $caminhoNovo = if ($nomeSubpasta) { Join-Path 'C:\' $nomeSubpasta } else { $null }
+
+    # 1) COD_HEMO
+    if ($chkCodHemo.Checked) {
+        $iniDA = Join-Path $caminhoNovo '_data_access.ini'
+        if (-not (Test-Path $iniDA)) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "_data_access.ini não encontrado em '$caminhoNovo'.","Aviso",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Warning)
+            return
+        }
+        $lines = Get-Content $iniDA
+        $found = $lines | Where-Object { $_ -match '^N =\[_cod_hem\]=' }
+        if (-not $found) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Parâmetro 'N =[_cod_hem]=' não encontrado ou incorreto.","Erro",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Error)
+            return
+        }
+        for ($j=0; $j -lt $lines.Count; $j++) {
+            if ($lines[$j] -match '^N =\[_cod_hem\]=') {
+                $lines[$j] = "N =[_cod_hem]= $($txtCodHemo.Text.Trim())"
+            }
+        }
+        Set-Content -Path $iniDA -Value $lines
+    }
+
+    # 2) BootStrap
+    if ($chkBootstrap.Checked) {
+        $iniWU = Join-Path (Join-Path $caminhoNovo 'bootstrap') 'WebUpdate.ini'
+        if (-not (Test-Path $iniWU)) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "WebUpdate.ini não encontrado em '$nomeSubpasta\bootstrap'.","Aviso",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Warning)
+            return
+        }
+        $lines = Get-Content $iniWU
+        for ($i=0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^PathLocalRoot=C:\\[^\\]+\\update\\?$') {
+                $lines[$i] = "PathLocalRoot=C:\$nomeSubpasta\update"
+            }
+            if ($lines[$i] -match '^FinalApp="C:\\[^\\]+\\atalhos\\') {
+                $pattern     = '^FinalApp="C:\\[^\\]+\\atalhos\\'
+                $replacement = 'FinalApp="C:\' + $nomeSubpasta + '\atalhos\'
+                $lines[$i]   = $lines[$i] -replace $pattern, $replacement
+            }
+        }
+        Set-Content -Path $iniWU -Value $lines
+    }
+
+    # 3) Registrar OCX
+    if ($chkRegistrarOCX.Checked) {
+        $ocxNames   = @(
+            'ezVidC60.ocx','ezVidCap.ocx','MSCOMCTL.OCX',
+            'mci32.ocx','mschrt20.ocx','mscomct2.ocx','mscal.ocx'
+        )
+        $sacsRoots  = Get-ChildItem -Path 'C:\' -Directory -Filter 'SACS*' -ErrorAction SilentlyContinue
+        $notFound   = @()
+        $registered = @()
+
+        # exibe progress
+        $lblProgress.Visible = $true
+        $progressBar.Visible = $true
+        $progressBar.Minimum = 0
+        $progressBar.Maximum = $ocxNames.Count
+        $progressBar.Value   = 0
+
+        foreach ($ocx in $ocxNames) {
+            $foundOne = $false
+            foreach ($root in $sacsRoots) {
+                $src = Get-ChildItem -Path $root.FullName -Filter $ocx -Recurse -File -ErrorAction SilentlyContinue |
+                       Select-Object -First 1
+                if ($src) {
+                    $dest32  = Join-Path $env:SystemRoot\System32  $ocx
+                    $destWow = Join-Path $env:SystemRoot\SysWOW64 $ocx
+                    Copy-Item -Path $src.FullName -Destination $dest32  -Force
+                    Copy-Item -Path $src.FullName -Destination $destWow -Force
+                    Start-Process -FilePath 'regsvr32.exe' `
+                                  -ArgumentList '/s', "`"$dest32`"" -Wait
+                    Start-Process -FilePath (Join-Path $env:SystemRoot 'SysWOW64\regsvr32.exe') `
+                                  -ArgumentList '/s', "`"$destWow`"" -Wait
+                    $foundOne   = $true
+                    $registered += $ocx
+                    break
+                }
+            }
+            if (-not $foundOne) { $notFound += $ocx }
+            $progressBar.Value += 1
+            [System.Windows.Forms.Application]::DoEvents()
+        }
+        # oculta progress
+        $lblProgress.Visible = $false
+        $progressBar.Visible = $false
+
+        if ($registered.Count) {
+    [System.Windows.Forms.MessageBox]::Show(
+        "OCX registradas:`n`n$($registered -join "`n")",
+        "Registrar OCX",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+    )
+}
+if ($notFound.Count) {
+    [System.Windows.Forms.MessageBox]::Show(
+        "OCX não registradas:`n`n$($notFound -join "`n")",
+        "Registrar OCX",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    )
+}
+
+    }
+
+    # 4) Atalhos
+    if ($chkAtalhos.Checked) {
+        $pathAt = Join-Path $caminhoNovo 'atalhos'
+        if (-not (Test-Path $pathAt)) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Pasta 'atalhos' não encontrada em '$caminhoNovo'.","Atalhos",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Warning)
+            return
+        }
+        $atalhos = Get-ChildItem -Path $pathAt -Recurse -Filter '*.lnk' -File -ErrorAction SilentlyContinue
+        foreach ($a in $atalhos) {
+            try {
+                $shell = New-Object -ComObject WScript.Shell
+                $s     = $shell.CreateShortcut($a.FullName)
+                $mudou = $false
+                foreach ($campo in 'TargetPath','WorkingDirectory') {
+                    $orig = $s.$campo
+                    if ($orig -like 'C:\*') {
+                        $parts = $orig -split '\\',4
+                        if ($parts.Count -ge 3) {
+                            $parts[1] = $nomeSubpasta
+                            $novo     = $parts -join '\'
+                            if ($s.$campo -ne $novo) {
+                                $s.$campo = $novo
+                                $mudou    = $true
+                            }
+                        }
+                    }
+                }
+                if ($mudou) { $s.Save() }
+            } catch {}
+        }
+    }
+})
+
+
+
+
+
+
+
+
+# ---------------------- ABA “Sobre” ----------------------
+$aboutText = New-Object System.Windows.Forms.TextBox
+$aboutText.Multiline  = $true
+$aboutText.ReadOnly   = $true
+$aboutText.Dock       = [System.Windows.Forms.DockStyle]::Fill
+$aboutText.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
+$aboutText.Text       = @"
+Ajuste de Atalhos v1.1
+Desenvolvido por HMG.
+"@
+$tabPageSobre.Controls.Add($aboutText)
 
 # ---------------------- ABA BOOTSTRAP (manual) ----------------------
 $bootstrapLabel = New-Object System.Windows.Forms.Label
