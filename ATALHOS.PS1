@@ -1,5 +1,6 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Drawing.Printing
 
 # ---------------------- FORMULÁRIO ----------------------
 $form = New-Object System.Windows.Forms.Form
@@ -13,36 +14,37 @@ $form.MinimizeBox     = $true
 # ---------------------- TABS ----------------------
 $tabControl = New-Object System.Windows.Forms.TabControl
 $tabControl.Dock = [System.Windows.Forms.DockStyle]::Fill
-$tabPage1         = New-Object System.Windows.Forms.TabPage("Atualizador")
-$tabPageBootstrap = New-Object System.Windows.Forms.TabPage("Bootstrap")
-$tabPageCopiaExe  = New-Object System.Windows.Forms.TabPage("Copiar exe")
-$tabPageSobre     = New-Object System.Windows.Forms.TabPage("Sobre")
+$tabPage1        = New-Object System.Windows.Forms.TabPage("Atualizador")
+$tabPageBootstrap= New-Object System.Windows.Forms.TabPage("Bootstrap")
+$tabPageCopiaExe = New-Object System.Windows.Forms.TabPage("Copiar exe")
+$tabPageSobre    = New-Object System.Windows.Forms.TabPage("Sobre")
 $tabControl.TabPages.AddRange(@($tabPage1,$tabPageBootstrap,$tabPageCopiaExe,$tabPageSobre))
 $form.Controls.Add($tabControl)
 
 # ---------------------- ABA “Atualizador” ----------------------
-# 1) Instrução
+
+# instrução
 $label = New-Object System.Windows.Forms.Label
 $label.Text     = "Selecione a pasta SACS:"
 $label.AutoSize = $true
 $label.Location = New-Object System.Drawing.Point(10,20)
 $tabPage1.Controls.Add($label)
 
-# 2) ComboBox pastas SACS
+# ComboBox pastas SACS
 $comboBox = New-Object System.Windows.Forms.ComboBox
 $comboBox.DropDownStyle = 'DropDownList'
-$comboBox.Size          = New-Object System.Drawing.Size(350,20)
 $comboBox.Location      = New-Object System.Drawing.Point(10,50)
+$comboBox.Size          = New-Object System.Drawing.Size(350,20)
 $comboBox.SelectedIndex = -1
 $tabPage1.Controls.Add($comboBox)
 
-# 3) Botão Atualizar
+# botão Atualizar
 $updateButton = New-Object System.Windows.Forms.Button
 $updateButton.Text     = "Atualizar"
 $updateButton.Location = New-Object System.Drawing.Point(370,48)
 $tabPage1.Controls.Add($updateButton)
 
-# 4) COD_HEMO
+# COD_HEMO
 $chkCodHemo = New-Object System.Windows.Forms.CheckBox
 $chkCodHemo.Location = New-Object System.Drawing.Point(10,90)
 $chkCodHemo.Size     = New-Object System.Drawing.Size(20,20)
@@ -51,11 +53,13 @@ $chkCodHemo.Add_CheckedChanged({
     if (-not $chkCodHemo.Checked) { $txtCodHemo.Clear() }
 })
 $tabPage1.Controls.Add($chkCodHemo)
+
 $lblCodHemo = New-Object System.Windows.Forms.Label
 $lblCodHemo.Text     = "COD_HEMO"
 $lblCodHemo.AutoSize = $true
 $lblCodHemo.Location = New-Object System.Drawing.Point(30,92)
 $tabPage1.Controls.Add($lblCodHemo)
+
 $txtCodHemo = New-Object System.Windows.Forms.TextBox
 $txtCodHemo.Location  = New-Object System.Drawing.Point(110,90)
 $txtCodHemo.Size      = New-Object System.Drawing.Size(100,20)
@@ -63,55 +67,107 @@ $txtCodHemo.MaxLength = 15
 $txtCodHemo.Enabled   = $false
 $tabPage1.Controls.Add($txtCodHemo)
 
-# 5) Atalhos
+# Atalhos
 $chkAtalhos = New-Object System.Windows.Forms.CheckBox
 $chkAtalhos.Location = New-Object System.Drawing.Point(220,90)
 $chkAtalhos.Size     = New-Object System.Drawing.Size(20,20)
 $tabPage1.Controls.Add($chkAtalhos)
+
 $lblAtalhos = New-Object System.Windows.Forms.Label
 $lblAtalhos.Text     = "Atalhos"
 $lblAtalhos.AutoSize = $true
 $lblAtalhos.Location = New-Object System.Drawing.Point(240,92)
 $tabPage1.Controls.Add($lblAtalhos)
 
-# 6) BootStrap
+# BootStrap
 $chkBootstrap = New-Object System.Windows.Forms.CheckBox
 $chkBootstrap.Location = New-Object System.Drawing.Point(320,90)
 $chkBootstrap.Size     = New-Object System.Drawing.Size(20,20)
 $tabPage1.Controls.Add($chkBootstrap)
+
 $lblBootstrap = New-Object System.Windows.Forms.Label
 $lblBootstrap.Text     = "BootStrap"
 $lblBootstrap.AutoSize = $true
 $lblBootstrap.Location = New-Object System.Drawing.Point(340,92)
 $tabPage1.Controls.Add($lblBootstrap)
 
-# 7) Registrar OCX
+# Registrar OCX
 $chkRegistrarOCX = New-Object System.Windows.Forms.CheckBox
 $chkRegistrarOCX.Location = New-Object System.Drawing.Point(420,90)
 $chkRegistrarOCX.Size     = New-Object System.Drawing.Size(20,20)
 $tabPage1.Controls.Add($chkRegistrarOCX)
+
 $lblRegistrarOCX = New-Object System.Windows.Forms.Label
 $lblRegistrarOCX.Text     = "Registrar OCX"
 $lblRegistrarOCX.AutoSize = $true
 $lblRegistrarOCX.Location = New-Object System.Drawing.Point(440,92)
 $tabPage1.Controls.Add($lblRegistrarOCX)
 
-# 8) Barra de progresso Registro de OCX
+# Impressora Gráfica (linha própria)
+$chkPrinterGraphics = New-Object System.Windows.Forms.CheckBox
+$chkPrinterGraphics.Location = New-Object System.Drawing.Point(10,130)
+$chkPrinterGraphics.Size     = New-Object System.Drawing.Size(20,20)
+$chkPrinterGraphics.Add_CheckedChanged({
+    $comboPrinterGraphics.Enabled = $chkPrinterGraphics.Checked
+    if (-not $chkPrinterGraphics.Checked) { $comboPrinterGraphics.SelectedIndex = -1 }
+})
+$tabPage1.Controls.Add($chkPrinterGraphics)
+
+$lblPrinterGraphics = New-Object System.Windows.Forms.Label
+$lblPrinterGraphics.Text     = "Impressora Gráfica"
+$lblPrinterGraphics.AutoSize = $true
+$lblPrinterGraphics.Location = New-Object System.Drawing.Point(30,132)
+$tabPage1.Controls.Add($lblPrinterGraphics)
+
+$comboPrinterGraphics = New-Object System.Windows.Forms.ComboBox
+$comboPrinterGraphics.DropDownStyle = 'DropDownList'
+$comboPrinterGraphics.Location      = New-Object System.Drawing.Point(150,130)
+$comboPrinterGraphics.Size          = New-Object System.Drawing.Size(370,20)
+$comboPrinterGraphics.Enabled       = $false
+$tabPage1.Controls.Add($comboPrinterGraphics)
+
+# Impressora Etiqueta (linha própria abaixo)
+$chkPrinterEtiqueta = New-Object System.Windows.Forms.CheckBox
+$chkPrinterEtiqueta.Location = New-Object System.Drawing.Point(10,160)
+$chkPrinterEtiqueta.Size     = New-Object System.Drawing.Size(20,20)
+$chkPrinterEtiqueta.Add_CheckedChanged({
+    $comboPrinterEtiqueta.Enabled = $chkPrinterEtiqueta.Checked
+    if (-not $chkPrinterEtiqueta.Checked) { $comboPrinterEtiqueta.SelectedIndex = -1 }
+})
+$tabPage1.Controls.Add($chkPrinterEtiqueta)
+
+$lblPrinterEtiqueta = New-Object System.Windows.Forms.Label
+$lblPrinterEtiqueta.Text     = "Impressora Etiqueta"
+$lblPrinterEtiqueta.AutoSize = $true
+$lblPrinterEtiqueta.Location = New-Object System.Drawing.Point(30,162)
+$tabPage1.Controls.Add($lblPrinterEtiqueta)
+
+$comboPrinterEtiqueta = New-Object System.Windows.Forms.ComboBox
+$comboPrinterEtiqueta.DropDownStyle = 'DropDownList'
+$comboPrinterEtiqueta.Location      = New-Object System.Drawing.Point(150,160)
+$comboPrinterEtiqueta.Size          = New-Object System.Drawing.Size(370,20)
+$comboPrinterEtiqueta.Enabled       = $false
+$tabPage1.Controls.Add($comboPrinterEtiqueta)
+
+
+# Progress bar and label (rodapé elevado)
 $lblProgress = New-Object System.Windows.Forms.Label
 $lblProgress.Text     = "Aguarde, registrando as OCX."
 $lblProgress.AutoSize = $true
-$lblProgress.Location = New-Object System.Drawing.Point(10,320) #Localização da label Registrando OCX
+$lblProgress.Location = New-Object System.Drawing.Point(10,280)
 $lblProgress.Visible  = $false
 $tabPage1.Controls.Add($lblProgress)
+
 $progressBar = New-Object System.Windows.Forms.ProgressBar
-$progressBar.Location = New-Object System.Drawing.Point(10,340) #Localização da progress bar Registro de OCX
+$progressBar.Location = New-Object System.Drawing.Point(10,300)
 $progressBar.Size     = New-Object System.Drawing.Size(530,20)
 $progressBar.Minimum  = 0
 $progressBar.Value    = 0
 $progressBar.Visible  = $false
 $tabPage1.Controls.Add($progressBar)
 
-# ---------------------- POPULA PASTAS SACS ----------------------
+# ---------------------- FUNÇÕES ----------------------
+
 function Populate-SacsFolders {
     $comboBox.Items.Clear()
     try {
@@ -122,46 +178,74 @@ function Populate-SacsFolders {
         $comboBox.SelectedIndex = -1
     } catch {
         [System.Windows.Forms.MessageBox]::Show(
-            "Erro ao listar pastas:`n$_","Aviso",
+            "Erro ao listar pastas:`n$_",
+            "Aviso",
             [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error)
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
     }
 }
+
+function Populate-Printers {
+    $comboPrinterGraphics.Items.Clear()
+    $comboPrinterEtiqueta.Items.Clear()
+    foreach ($p in [System.Drawing.Printing.PrinterSettings]::InstalledPrinters) {
+        $comboPrinterGraphics.Items.Add($p)
+        $comboPrinterEtiqueta.Items.Add($p)
+    }
+    $comboPrinterGraphics.SelectedIndex = -1
+    $comboPrinterEtiqueta.SelectedIndex = -1
+}
+
 $comboBox.Add_SelectedIndexChanged({
     if ($comboBox.SelectedIndex -ge 0) {
-        $sel = $comboBox.SelectedItem.ToString().Trim()
+        $sel      = $comboBox.SelectedItem.ToString().Trim()
         $pathBoot = Join-Path (Join-Path 'C:\' $sel) 'bootstrap'
         if (Test-Path $pathBoot) {
             $resp = [System.Windows.Forms.MessageBox]::Show(
                 "Bootstrap encontrado em '$sel'. Deseja pré-marcá-lo?",
                 "Bootstrap",
                 [System.Windows.Forms.MessageBoxButtons]::YesNo,
-                [System.Windows.Forms.MessageBoxIcon]::Question)
+                [System.Windows.Forms.MessageBoxIcon]::Question
+            )
             $chkBootstrap.Checked = ($resp -eq [System.Windows.Forms.DialogResult]::Yes)
         } else {
             $chkBootstrap.Checked = $false
         }
     }
 })
-$form.Add_Shown({ Populate-SacsFolders })
+
+# exibe form e popula listas
+$form.Add_Shown({
+    Populate-SacsFolders
+    Populate-Printers
+})
 
 # ---------------------- CLIQUE “Atualizar” ----------------------
 $updateButton.Add_Click({
-    # validacão COMBO apenas se ações que requerem pasta SACS
-    $needsFolder = $chkCodHemo.Checked -or $chkAtalhos.Checked -or $chkBootstrap.Checked
+   # 0) valida pasta SACS para todos os itens que precisam dela
+    $needsFolder = $chkCodHemo.Checked `
+                 -or $chkAtalhos.Checked `
+                 -or $chkBootstrap.Checked `
+                 -or $chkPrinterGraphics.Checked `
+                 -or $chkPrinterEtiqueta.Checked
+
     if ($needsFolder -and $comboBox.SelectedIndex -lt 0) {
         [System.Windows.Forms.MessageBox]::Show(
-            "Selecione uma pasta SACS na lista.","Erro",
+            "Selecione uma pasta SACS na lista.",
+            "Erro",
             [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error)
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
         return
     }
 
+
+
+
     $nomeSubpasta = if ($comboBox.SelectedIndex -ge 0) {
         $comboBox.SelectedItem.ToString().Trim().ToLower()
-    } else {
-        ""
-    }
+    } else { "" }
     $caminhoNovo = if ($nomeSubpasta) { Join-Path 'C:\' $nomeSubpasta } else { $null }
 
     # 1) COD_HEMO
@@ -169,18 +253,22 @@ $updateButton.Add_Click({
         $iniDA = Join-Path $caminhoNovo '_data_access.ini'
         if (-not (Test-Path $iniDA)) {
             [System.Windows.Forms.MessageBox]::Show(
-                "_data_access.ini não encontrado em '$caminhoNovo'.","Aviso",
+                "_data_access.ini não encontrado em '$caminhoNovo'.",
+                "Aviso",
                 [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Warning)
+                [System.Windows.Forms.MessageBoxIcon]::Warning
+            )
             return
         }
         $lines = Get-Content $iniDA
         $found = $lines | Where-Object { $_ -match '^N =\[_cod_hem\]=' }
         if (-not $found) {
             [System.Windows.Forms.MessageBox]::Show(
-                "Parâmetro 'N =[_cod_hem]=' não encontrado ou incorreto.","Erro",
+                "Parâmetro 'N =[_cod_hem]=' não encontrado ou incorreto.",
+                "Erro",
                 [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Error)
+                [System.Windows.Forms.MessageBoxIcon]::Error
+            )
             return
         }
         for ($j=0; $j -lt $lines.Count; $j++) {
@@ -196,9 +284,11 @@ $updateButton.Add_Click({
         $iniWU = Join-Path (Join-Path $caminhoNovo 'bootstrap') 'WebUpdate.ini'
         if (-not (Test-Path $iniWU)) {
             [System.Windows.Forms.MessageBox]::Show(
-                "WebUpdate.ini não encontrado em '$nomeSubpasta\bootstrap'.","Aviso",
+                "WebUpdate.ini não encontrado em '$nomeSubpasta\bootstrap'.",
+                "Aviso",
                 [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Warning)
+                [System.Windows.Forms.MessageBoxIcon]::Warning
+            )
             return
         }
         $lines = Get-Content $iniWU
@@ -255,37 +345,137 @@ $updateButton.Add_Click({
             $progressBar.Value += 1
             [System.Windows.Forms.Application]::DoEvents()
         }
+
         # oculta progress
         $lblProgress.Visible = $false
         $progressBar.Visible = $false
 
         if ($registered.Count) {
-    [System.Windows.Forms.MessageBox]::Show(
-        "OCX registradas:`n`n$($registered -join "`n")",
-        "Registrar OCX",
-        [System.Windows.Forms.MessageBoxButtons]::OK,
-        [System.Windows.Forms.MessageBoxIcon]::Information
-    )
-}
-if ($notFound.Count) {
-    [System.Windows.Forms.MessageBox]::Show(
-        "OCX não registradas:`n`n$($notFound -join "`n")",
-        "Registrar OCX",
-        [System.Windows.Forms.MessageBoxButtons]::OK,
-        [System.Windows.Forms.MessageBoxIcon]::Warning
-    )
-}
-
+            [System.Windows.Forms.MessageBox]::Show(
+                "OCX registradas:`n`n$($registered -join "`n")",
+                "Registrar OCX",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Information
+            )
+        }
+        if ($notFound.Count) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "OCX não registradas:`n`n$($notFound -join "`n")",
+                "Registrar OCX",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Warning
+            )
+        }
     }
+
+   # 4) Configurar impressoras em configuracao.ini
+    if ($chkPrinterGraphics.Checked -or $chkPrinterEtiqueta.Checked) {
+        $configIni = Join-Path $caminhoNovo 'configuracao.ini'
+        if (-not (Test-Path $configIni)) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Arquivo 'configuracao.ini' não encontrado em '$caminhoNovo'.",
+                "Erro",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Error
+            )
+            return
+        }
+        $cfgLines = Get-Content $configIni
+
+        # Impressora Gráfica
+        if ($chkPrinterGraphics.Checked) {
+            # valida existência e formato dos parâmetros
+            $missing = @()
+            if (-not ($cfgLines -match '^\[FICHA_DOADOR\]\s*=')) { $missing += '[FICHA_DOADOR]' }
+            if (-not ($cfgLines -match '^\[FICHA_REDOME\]\s*='))  { $missing += '[FICHA_REDOME]' }
+            if ($missing.Count) {
+                [System.Windows.Forms.MessageBox]::Show(
+                    "Parâmetros incorretos ou ausentes em configuracao.ini: $($missing -join ', ')",
+                    "Erro",
+                    [System.Windows.Forms.MessageBoxButtons]::OK,
+                    [System.Windows.Forms.MessageBoxIcon]::Error
+                )
+                return
+            }
+            $printerG = $comboPrinterGraphics.SelectedItem
+            if ([string]::IsNullOrEmpty($printerG)) {
+                $resp = [System.Windows.Forms.MessageBox]::Show(
+                    "Nenhuma impressora gráfica selecionada. Os parâmetros serão definidos em branco. Deseja continuar?",
+                    "Confirmação",
+                    [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                    [System.Windows.Forms.MessageBoxIcon]::Warning
+                )
+                if ($resp -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+                $printerG = ''
+            }
+            for ($i = 0; $i -lt $cfgLines.Count; $i++) {
+                if ($cfgLines[$i] -match '^\[FICHA_DOADOR\]\s*=') {
+                    $cfgLines[$i] = "[FICHA_DOADOR]   = $printerG"
+                }
+                if ($cfgLines[$i] -match '^\[FICHA_REDOME\]\s*=') {
+                    $cfgLines[$i] = "[FICHA_REDOME]   = $printerG"
+                }
+            }
+        }
+
+        # Impressora Etiqueta
+        if ($chkPrinterEtiqueta.Checked) {
+            $missing = @()
+            if (-not ($cfgLines -match '^\[BARCODE_DOADOR\]\s*=')) { $missing += '[BARCODE_DOADOR]' }
+            if (-not ($cfgLines -match '^\[BARCODE_GERAL\]\s*='))  { $missing += '[BARCODE_GERAL]' }
+            if ($missing.Count) {
+                [System.Windows.Forms.MessageBox]::Show(
+                    "Parâmetros incorretos ou ausentes em configuracao.ini: $($missing -join ', ')",
+                    "Erro",
+                    [System.Windows.Forms.MessageBoxButtons]::OK,
+                    [System.Windows.Forms.MessageBoxIcon]::Error
+                )
+                return
+            }
+            $printerE = $comboPrinterEtiqueta.SelectedItem
+            if ([string]::IsNullOrEmpty($printerE)) {
+                $resp = [System.Windows.Forms.MessageBox]::Show(
+                    "Nenhuma impressora de etiqueta selecionada. Os parâmetros serão definidos em branco. Deseja continuar?",
+                    "Confirmação",
+                    [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                    [System.Windows.Forms.MessageBoxIcon]::Warning
+                )
+                if ($resp -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+                $printerE = ''
+            }
+            for ($i = 0; $i -lt $cfgLines.Count; $i++) {
+                if ($cfgLines[$i] -match '^\[BARCODE_DOADOR\]\s*=') {
+                    $cfgLines[$i] = "[BARCODE_DOADOR] = $printerE"
+                }
+                if ($cfgLines[$i] -match '^\[BARCODE_GERAL\]\s*=') {
+                    $cfgLines[$i] = "[BARCODE_GERAL]  = $printerE"
+                }
+            }
+        }
+
+        # grava alterações e exibe confirmação
+        Set-Content -Path $configIni -Value $cfgLines
+        [System.Windows.Forms.MessageBox]::Show(
+            "Os parâmetros selecionados foram atualizados com sucesso!",
+            "Configuração",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Information
+        )
+    }
+
+
+
 
     # 4) Atalhos
     if ($chkAtalhos.Checked) {
         $pathAt = Join-Path $caminhoNovo 'atalhos'
         if (-not (Test-Path $pathAt)) {
             [System.Windows.Forms.MessageBox]::Show(
-                "Pasta 'atalhos' não encontrada em '$caminhoNovo'.","Atalhos",
+                "Pasta 'atalhos' não encontrada em '$caminhoNovo'.",
+                "Atalhos",
                 [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Warning)
+                [System.Windows.Forms.MessageBoxIcon]::Warning
+            )
             return
         }
         $atalhos = Get-ChildItem -Path $pathAt -Recurse -Filter '*.lnk' -File -ErrorAction SilentlyContinue
@@ -313,10 +503,6 @@ if ($notFound.Count) {
         }
     }
 })
-
-
-
-
 
 
 
