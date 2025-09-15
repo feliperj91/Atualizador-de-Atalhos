@@ -390,14 +390,7 @@ $updateButton.Add_Click({
             $progressBar.Value++; [System.Windows.Forms.Application]::DoEvents()
         }
         $lblProgress.Visible = $false; $progressBar.Visible = $false
-        if ($ocxRegistered) {
-            [System.Windows.Forms.MessageBox]::Show(
-              "OCX registradas com sucesso.",
-              "Sucesso",
-              [System.Windows.Forms.MessageBoxButtons]::OK,
-              [System.Windows.Forms.MessageBoxIcon]::Information)
-        }
-    }
+            }
 
     # 4) Instalar Fontes
     if ($chkFontes.Checked) {
