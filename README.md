@@ -24,7 +24,7 @@
 
 ## 🖥️ Requisitos
 
-- Windows 10 ou superior
+- Windows 8.1 ou superior
 - PowerShell 5.1+
 - Permissões administrativas (recomendado para operações de cópia e edição de arquivos)
 
